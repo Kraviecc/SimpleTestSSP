@@ -1,0 +1,6 @@
+1. Connect server + client via SignalR
+2. Generate randomly auctions (set auction time to let's say 200ms) and send information to client via SignalR
+3. Send bid from client
+POST /api/bids
+4. End auction on server and send information who wins + maybe messages to other with info why loss
+5. Remember - second price win
