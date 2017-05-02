@@ -31,6 +31,7 @@ namespace SimpleTestSSP
 
         public void BroadcastNewAuction(Auction auction)
         {
+            auction.ID = Guid.NewGuid().ToString();
             _auctions.Add(auction);
 
             Clients.All.newAuction(auction);

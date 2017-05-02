@@ -12,13 +12,14 @@ namespace SimpleTestDSP
     class Program
     {
         static bool isError = false;
+        static IHubProxy myHub = null;
 
         static void Main(string[] args)
         {
             Thread.Sleep(5000);
 
             var connection = new HubConnection("http://localhost:62664/");
-            var myHub = connection.CreateHubProxy("RTBHub");
+            myHub = connection.CreateHubProxy("RTBHub");
 
             connection.Start().ContinueWith(task => {
                 if (task.IsFaulted)
@@ -36,6 +37,10 @@ namespace SimpleTestDSP
 
             if (!isError)
             {
+                myHub.On<Auction>("newAuction", auction => {
+                    addBid(auction);
+                });
+
                 myHub.Invoke<IEnumerable<Auction>>("GetValidAuctions").ContinueWith(task =>
                 {
                     if (task.IsFaulted)
@@ -45,7 +50,7 @@ namespace SimpleTestDSP
                     }
                     else
                     {
-                        Console.WriteLine(task.Result.FirstOrDefault()?.ID);
+                        addBid(task.Result);
                     }
                 });
 
@@ -57,7 +62,15 @@ namespace SimpleTestDSP
 
         static void addBid(Auction auction)
         {
+            Bid bid = new Bid { AuctionID = auction.ID };
 
+            myHub.Invoke<Bid>("AddBid", bid).Wait();
+        }
+
+        static void addBid(IEnumerable<Auction> auctions)
+        {
+            foreach (var auction in auctions)
+                addBid(auction);
         }
     }
 }

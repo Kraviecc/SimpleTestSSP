@@ -7,7 +7,7 @@ namespace SimpleTestSSP.DAL
 {
     public class Bid
     {
-        public int AuctionID { get; set; } = 0;
+        public string AuctionID { get; set; } = "";
 
         public string ClientID { get; internal set; } = string.Empty;
     }

@@ -7,9 +7,9 @@ namespace SimpleTestSSP.DAL
 {
     public class Auction
     {
-        public int ID { get; set; } = 0;
+        public string ID { get; set; } = string.Empty;
 
-        public bool IsValid { get; set; } = false;
+        public bool IsValid { get; set; } = true;
 
         public List<Bid> Bids { get; set; } = new List<Bid>();
     }
