@@ -1,10 +1,10 @@
 DONE:
+0. How to check given living time for auction?
 1. Connect server + clients via SignalR
+2. Create website - when client opens it, generate new auction (set auction time on server to let's say 150ms) and send information to all connected clients via SignalR
+3. Send bid from client
+4. End auction on server and send information who wins + maybe messages to other with info why loss
 
 TODO:
-0. How to check given living time for auction?
-2. Create website - when client opens it, generate new auction (set auction time on server to let's say 150ms) and send information to all connected clients via SignalR
-3. Send bid from client -- POST /api/bids
-4. End auction on server and send information who wins + maybe messages to other with info why loss
 5. Send ad to website
 6. Remember - second price win

@@ -28,13 +28,5 @@ namespace SimpleTestSSP.Hubs
         {
             return _RTB.AddBid(bid, Context.ConnectionId);
         }
-
-        public string NewAuction()
-        {
-            Auction auction = new Auction { };
-            _RTB.BroadcastNewAuction(auction);
-
-            return "created";
-        }
     }
 }

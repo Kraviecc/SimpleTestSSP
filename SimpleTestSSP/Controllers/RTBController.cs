@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Web.Http;
 
 namespace SimpleTestSSP.Controllers
 {
     public class RTBController : ApiController
     {
-        public string Get()
+        public async Task<string> Get()
         {
-            return "Advertisement";
+            var winningBid = await RTB.Instance.BroadcastNewAuction(new DAL.Auction());
+            
+            return winningBid?.AuctionID ?? "No bids";
         }
     }
 }

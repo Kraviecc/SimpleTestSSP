@@ -16,8 +16,6 @@ namespace SimpleTestDSP
 
         static void Main(string[] args)
         {
-            Thread.Sleep(5000);
-
             var connection = new HubConnection("http://localhost:62664/");
             myHub = connection.CreateHubProxy("RTBHub");
 
@@ -38,33 +36,37 @@ namespace SimpleTestDSP
             if (!isError)
             {
                 myHub.On<Auction>("newAuction", auction => {
+                    Console.WriteLine("New Auction arrived: " + auction.ID);
                     addBid(auction);
                 });
 
-                myHub.Invoke<IEnumerable<Auction>>("GetValidAuctions").ContinueWith(task =>
-                {
-                    if (task.IsFaulted)
-                    {
-                        Console.WriteLine("There was an error calling send: {0}",
-                                          task.Exception.GetBaseException());
-                    }
-                    else
-                    {
-                        addBid(task.Result);
-                    }
+                myHub.On<string>("infoWinLose", info => {
+                    Console.WriteLine("Info: " + info);
                 });
 
-                connection.Stop();
+                //myHub.Invoke<IEnumerable<Auction>>("GetValidAuctions").ContinueWith(task =>
+                //{
+                //    if (task.IsFaulted)
+                //    {
+                //        Console.WriteLine("There was an error calling send: {0}",
+                //                          task.Exception.GetBaseException());
+                //    }
+                //    else
+                //    {
+                //        addBid(task.Result);
+                //    }
+                //});
             }
 
             Console.Read();
+            connection.Stop();
         }
 
         static void addBid(Auction auction)
         {
-            Bid bid = new Bid { AuctionID = auction.ID };
+            Bid bid = new Bid { AuctionID = auction.ID, Amount = 33 };
 
-            myHub.Invoke<Bid>("AddBid", bid).Wait();
+            myHub.Invoke<Bid>("AddBid", bid);
         }
 
         static void addBid(IEnumerable<Auction> auctions)
