@@ -39,12 +39,12 @@ namespace SimpleTestSSP
             Clients.All.newAuction(auction);
 
             await Task.Delay(maxAuctionTime);
-            
+
             var winningBid = calculateWinningBid(auction);
 
             if (winningBid != null)
             {
-                Clients.Client(winningBid.ClientID).infoWinLose("WIN"); //NullReferencePointerException
+                Clients.Client(winningBid.ClientID).infoWinLose("WIN");
                 Clients.AllExcept(winningBid.ClientID).infoWinLose("LOSE");
             }
 
@@ -80,12 +80,22 @@ namespace SimpleTestSSP
             }
         }
 
-        private Bid calculateWinningBid(Auction auction)
+        private Bid calculateWinningBid(Auction auction) // second price auction
         {
             if (auction.Bids.Count < 2)
-                return auction.Bids.FirstOrDefault();
+            {
+                var winningBid = auction.Bids.FirstOrDefault();
+                if (winningBid != null)
+                    winningBid.Amount = 0.01;
+
+                return winningBid;
+            }
             else
-                return auction.Bids.OrderByDescending(bid => bid.Amount).ElementAt(1);
+            {
+                var winningBid = auction.Bids.OrderByDescending(bid => bid.Amount).ElementAt(1);
+                winningBid.Amount = auction.Bids.OrderByDescending(bid => bid.Amount).ElementAt(2).Amount + 0.01;
+                return winningBid;
+            }
         }
     }
 }

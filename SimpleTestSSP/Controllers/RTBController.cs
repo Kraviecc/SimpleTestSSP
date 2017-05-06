@@ -14,7 +14,7 @@ namespace SimpleTestSSP.Controllers
         {
             var winningBid = await RTB.Instance.BroadcastNewAuction(new DAL.Auction());
             
-            return winningBid?.AuctionID ?? "No bids";
+            return winningBid?.Ad;
         }
     }
 }

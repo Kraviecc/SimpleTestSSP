@@ -12,5 +12,7 @@ namespace SimpleTestSSP.DAL
         public string ClientID { get; internal set; } = string.Empty;
 
         public double Amount { get; set; } = 0;
+
+        public string Ad { get; set; } = string.Empty;
     }
 }

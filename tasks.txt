@@ -4,7 +4,12 @@ DONE:
 2. Create website - when client opens it, generate new auction (set auction time on server to let's say 150ms) and send information to all connected clients via SignalR
 3. Send bid from client
 4. End auction on server and send information who wins + maybe messages to other with info why loss
+6. Remember - second price win
+8. Set random in DSP
 
 TODO:
-5. Send ad to website
-6. Remember - second price win
+5. Send ad to website - how to choose different ads on different runs of DSP?
+7. Logger class (SSP, DSP)
+9. DSP reconnect?
+10. Custom class 'infoWinLose' (win/lose, winning bid, info why lose)
+11. After run DSP, execute "getValidAuctions" on SSP

@@ -11,6 +11,9 @@ namespace SimpleTestDSP
 {
     class Program
     {
+        static readonly Random random = new Random();
+        static readonly object randomLock = new object();
+
         static bool isError = false;
         static IHubProxy myHub = null;
 
@@ -64,7 +67,7 @@ namespace SimpleTestDSP
 
         static void addBid(Auction auction)
         {
-            Bid bid = new Bid { AuctionID = auction.ID, Amount = 33 };
+            Bid bid = new Bid { AuctionID = auction.ID, Amount = getRandom(), Ad =  "aa"};
 
             myHub.Invoke<Bid>("AddBid", bid);
         }
@@ -73,6 +76,14 @@ namespace SimpleTestDSP
         {
             foreach (var auction in auctions)
                 addBid(auction);
+        }
+
+        static double getRandom()
+        {
+            lock (randomLock)
+            {
+                return random.NextDouble() + Convert.ToDouble(random.Next(0, 5)); // 0.0 - 6.0
+            }
         }
     }
 }
