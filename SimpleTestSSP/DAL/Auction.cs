@@ -11,6 +11,8 @@ namespace SimpleTestSSP.DAL
 
         public bool IsValid { get; set; } = true;
 
+        public Bid WinningBid { get; internal set; } = null;
+
         public List<Bid> Bids { get; set; } = new List<Bid>();
     }
 }

@@ -24,9 +24,9 @@ namespace SimpleTestSSP.Hubs
             return _RTB.GetValidAuctions();
         }
 
-        public Result AddBid(Bid bid)
+        public void AddBid(Bid bid)
         {
-            return _RTB.AddBid(bid, Context.ConnectionId);
+            _RTB.AddBid(bid, Context.ConnectionId);
         }
     }
 }

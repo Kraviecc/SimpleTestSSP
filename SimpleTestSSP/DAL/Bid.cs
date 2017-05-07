@@ -14,5 +14,7 @@ namespace SimpleTestSSP.DAL
         public double Amount { get; set; } = 0;
 
         public string Ad { get; set; } = string.Empty;
+
+        public DateTime TimeStamp { get; } = DateTime.Now;
     }
 }

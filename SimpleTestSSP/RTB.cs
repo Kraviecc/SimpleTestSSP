@@ -5,6 +5,7 @@ using SimpleTestSSP.Hubs;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -14,7 +15,7 @@ namespace SimpleTestSSP
     {
         private readonly int maxAuctionTime = 150; //ms
         private readonly static Lazy<RTB> _instance = new Lazy<RTB>(() => new RTB(GlobalHost.ConnectionManager.GetHubContext<RTBHub>().Clients));
-        private readonly ConcurrentBag<Auction> _auctions = new ConcurrentBag<Auction>();
+        public readonly ConcurrentBag<Auction> auctions = new ConcurrentBag<Auction>();
         private readonly object _addBidLock = new object();
         private IHubConnectionContext<dynamic> Clients { get; set; }
 
@@ -34,49 +35,77 @@ namespace SimpleTestSSP
         public async Task<Bid> BroadcastNewAuction(Auction auction)
         {
             auction.ID = Guid.NewGuid().ToString();
-            _auctions.Add(auction);
+            auctions.Add(auction);
 
+            WriteLine("New auction arrived.", auction.ID);
             Clients.All.newAuction(auction);
 
             await Task.Delay(maxAuctionTime);
+            auction.IsValid = false;
+            WriteLine("Auction is no longer valid.", auction.ID);
 
-            var winningBid = calculateWinningBid(auction);
+            auction.WinningBid = calculateWinningBid(auction);
 
-            if (winningBid != null)
+            if (auction.WinningBid != null)
             {
-                Clients.Client(winningBid.ClientID).infoWinLose("WIN");
-                Clients.AllExcept(winningBid.ClientID).infoWinLose("LOSE");
+                WriteLine("Winning bid: " + auction.WinningBid.ClientID + " " + auction.WinningBid.Amount + "$.", auction.ID);
+                Clients.Client(auction.WinningBid.ClientID).infoWinLose(new Info
+                {
+                    AuctionID = auction.ID,
+                    IsWin = true,
+                    Message = "You won this auction. Congratulations! You pay " + auction.WinningBid.Amount + "$."
+                });
+                Clients.AllExcept(auction.WinningBid.ClientID).infoWinLose(new Info
+                {
+                    AuctionID = auction.ID,
+                    IsWin = false,
+                    Message = "You lost this auction. Someone gave higher bid."
+                });
             }
+            else
+                WriteLine("No bids.", auction.ID);
 
-            return winningBid;
+            return auction.WinningBid;
         }
 
         public IEnumerable<Auction> GetValidAuctions()
         {
-            return _auctions.Where(auction => auction.IsValid == true);
+            return auctions.Where(auction => auction.IsValid == true);
         }
 
-        public Result AddBid(Bid bid, string connectionID)
+        public void AddBid(Bid bid, string connectionID)
         {
-            Result result = new Result();
             lock (_addBidLock)
             {
-                var auctionToAddBid = _auctions.FirstOrDefault(auction => auction.ID == bid.AuctionID);
+                bid.ClientID = connectionID;
+                var auctionToAddBid = auctions.FirstOrDefault(auction => auction.ID == bid.AuctionID);
 
-                if (auctionToAddBid != null)
+                if (auctionToAddBid != null && auctionToAddBid.IsValid)
                 {
-                    bid.ClientID = connectionID;
                     auctionToAddBid.Bids.Add(bid);
 
-                    result.Message = "Bid added to auction = " + bid.AuctionID;
+                    WriteLine("Added bid from " + bid.ClientID + ", amount: " + bid.Amount + "$.", bid.AuctionID);
                 }
-                else
+                else if (auctionToAddBid == null)
                 {
-                    result.IsError = true;
-                    result.Message = "Incorrect field value: '" + nameof(Bid.AuctionID) + "'";
+                    WriteLine("Client " + bid.ClientID + " sent bid with incorrect auction ID.", auctionToAddBid.ID);
+                    Clients.Client(bid.ClientID).infoWinLose(new Info
+                    {
+                        AuctionID = auctionToAddBid.ID,
+                        IsWin = false,
+                        Message = "You sent the bid with incorrect auction ID."
+                    });
                 }
-
-                return result;
+                else if (!auctionToAddBid.IsValid)
+                {
+                    WriteLine("Client " + bid.ClientID + " sent bid too late.", auctionToAddBid.ID);
+                    Clients.Client(bid.ClientID).infoWinLose(new Info
+                    {
+                        AuctionID = auctionToAddBid.ID,
+                        IsWin = false,
+                        Message = "You sent the bid too late."
+                    });
+                }
             }
         }
 
@@ -92,10 +121,15 @@ namespace SimpleTestSSP
             }
             else
             {
-                var winningBid = auction.Bids.OrderByDescending(bid => bid.Amount).ElementAt(1);
-                winningBid.Amount = auction.Bids.OrderByDescending(bid => bid.Amount).ElementAt(2).Amount + 0.01;
+                var winningBid = auction.Bids.OrderByDescending(bid => bid.Amount).ElementAt(0);
+                winningBid.Amount = auction.Bids.OrderByDescending(bid => bid.Amount).ElementAt(1).Amount + 0.01;
                 return winningBid;
             }
+        }
+
+        private void WriteLine(string text = "", string auctionID = "")
+        {
+            Trace.TraceInformation("\n\t{0}\n\tAID - {1}\n\t{2}", DateTime.Now, auctionID, text);
         }
     }
 }

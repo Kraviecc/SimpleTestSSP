@@ -5,9 +5,12 @@ using System.Web;
 
 namespace SimpleTestSSP.DAL
 {
-    public class Result
+    public class Info
     {
-        public bool IsError { get; set; } = false;
+        public string AuctionID { get; set; } = string.Empty;
+
+        public bool IsWin { get; set; } = false;
+
         public string Message { get; set; } = string.Empty;
     }
 }

@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNet.SignalR.Client;
-using SimpleTestSSP.DAL;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,79 +10,46 @@ namespace SimpleTestDSP
 {
     class Program
     {
-        static readonly Random random = new Random();
-        static readonly object randomLock = new object();
-
-        static bool isError = false;
-        static IHubProxy myHub = null;
+        static string ad = string.Empty;
+        static int number = 0;
 
         static void Main(string[] args)
         {
-            var connection = new HubConnection("http://localhost:62664/");
-            myHub = connection.CreateHubProxy("RTBHub");
+            number = getDSPNumber();
 
-            connection.Start().ContinueWith(task => {
-                if (task.IsFaulted)
-                {
-                    Console.WriteLine("There was an error opening the connection:{0}",
-                                      task.Exception.GetBaseException());
-                    isError = true;
-                }
-                else
-                {
-                    Console.WriteLine("Connected");
-                }
+            SignalR signalR = new SignalR();
+            signalR.WriteLine(text: number.ToString());
 
-            }).Wait();
+            ad = getAd(number);
+            signalR.Run(ad);
+        }
 
-            if (!isError)
+        static int getDSPNumber()
+        {
+            return System.Diagnostics.Process
+                    .GetProcessesByName(Path
+                    .GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() + 1;
+        }
+
+        static string getAd(int number)
+        {
+            string ad = string.Empty;
+
+            DirectoryInfo dInfo = new DirectoryInfo(Environment.CurrentDirectory);
+            var ads = dInfo.GetFiles(number + ".*");
+            var alternativeAd = dInfo.GetFiles("1.*");
+
+            if (ads.Length > 0)
+                ad = Convert.ToBase64String(File.ReadAllBytes(ads.FirstOrDefault().FullName));
+            else if (alternativeAd.Length > 0)
+                ad = Convert.ToBase64String(File.ReadAllBytes(alternativeAd.FirstOrDefault().FullName));
+            else
             {
-                myHub.On<Auction>("newAuction", auction => {
-                    Console.WriteLine("New Auction arrived: " + auction.ID);
-                    addBid(auction);
-                });
-
-                myHub.On<string>("infoWinLose", info => {
-                    Console.WriteLine("Info: " + info);
-                });
-
-                //myHub.Invoke<IEnumerable<Auction>>("GetValidAuctions").ContinueWith(task =>
-                //{
-                //    if (task.IsFaulted)
-                //    {
-                //        Console.WriteLine("There was an error calling send: {0}",
-                //                          task.Exception.GetBaseException());
-                //    }
-                //    else
-                //    {
-                //        addBid(task.Result);
-                //    }
-                //});
+                Console.WriteLine("\n\nNo ads in app directory. Shutting down...");
+                Console.Read();
+                Environment.Exit(0);
             }
-
-            Console.Read();
-            connection.Stop();
-        }
-
-        static void addBid(Auction auction)
-        {
-            Bid bid = new Bid { AuctionID = auction.ID, Amount = getRandom(), Ad =  "aa"};
-
-            myHub.Invoke<Bid>("AddBid", bid);
-        }
-
-        static void addBid(IEnumerable<Auction> auctions)
-        {
-            foreach (var auction in auctions)
-                addBid(auction);
-        }
-
-        static double getRandom()
-        {
-            lock (randomLock)
-            {
-                return random.NextDouble() + Convert.ToDouble(random.Next(0, 5)); // 0.0 - 6.0
-            }
+            return ad;
         }
     }
 }
