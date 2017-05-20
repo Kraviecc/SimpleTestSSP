@@ -72,7 +72,6 @@ namespace SimpleTestDSP
             }
 
             Console.Read();
-            connection.Stop();
         }
 
         public void WriteLine(bool initial = true, string text = "", string auctionID = "")

@@ -13,6 +13,3 @@ DONE:
 12. WebAPI - GET /Auctions - execute in browser and get plain json contains list of all auctions
 13. Add in Auction class property "WinningBid" - internal set
 14. Check whether bid arrived to late (Auction.IsValid -> false)
-
-TODO:
-9. DSP reconnect?
