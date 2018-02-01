@@ -1,0 +1,4 @@
+language: csharp
+solution: UIAutomation.sln
+dist: xenial
+os: linux
